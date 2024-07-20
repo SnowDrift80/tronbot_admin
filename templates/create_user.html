@@ -1,0 +1,68 @@
+{#
+  This HTML template is used for the user creation page.
+
+  **Overview**:
+  - Provides a structured form for administrators to create new users.
+
+  **Features**:
+  - **Layout**:
+    - Utilizes a grid layout to center the user creation form both vertically and horizontally within the viewport.
+    - The container has a height of 100vh (viewport height) for vertical centering.
+
+  - **Header**:
+    - Displays a centered header with the text "Create User" in red color.
+    - Uses Semantic UI's header and image classes for styling.
+
+  - **User Creation Form**:
+    - **Form Element**: 
+      - Uses the `POST` method to submit the form data to the server at the URL provided by Flask’s `url_for('create_user')`.
+    - **Form Fields**:
+      - **Username Field**: 
+        - Includes an icon (`user icon`) and a text input for entering the username.
+      - **Password Field**:
+        - Includes an icon (`lock icon`) and a password input for entering the password.
+    - **Submit Button**:
+      - A large, fluid button styled in red to submit the form for user creation.
+
+  **Styling**:
+  - **Semantic UI Classes**:
+    - Utilizes classes from Semantic UI to style the form, inputs, and buttons.
+  - **Inline Styles**:
+    - Inline styles are applied for maximum width of the form and padding adjustments.
+
+  **Usage**:
+  - This template extends `base.html` and injects content into the `content` block, ensuring a consistent look and feel across different pages.
+
+#}
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="ui middle aligned center aligned grid" style="height: 100vh;">
+  <div class="column" style="max-width: 450px; padding-top: 0vh;">
+    <h2 class="ui red image header">
+      <div class="content">
+        Create User
+      </div>
+    </h2>
+    <form class="ui large form" method="POST" action="{{ url_for('create_user') }}">
+      <div class="ui stacked red segment">
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="user icon"></i>
+            <input type="text" name="username" placeholder="Username">
+          </div>
+        </div>
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="lock icon"></i>
+            <input type="password" name="password" placeholder="Password">
+          </div>
+        </div>
+        <button class="ui fluid large red submit button" type="submit">Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

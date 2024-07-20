@@ -1,0 +1,12 @@
+/* static/css/custom.css */
+
+.ui.menu {
+    background-color: #00093a; /* Very dark blue background */
+    color: #f0f0f0; /* Almost white text color */
+    border-radius: 0; /* Remove rounded corners */
+}
+
+.ui.menu .item {
+    font-weight: bold; /* Bold font for menu items */
+    color: #f0f0f0;
+}

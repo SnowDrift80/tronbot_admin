@@ -1,0 +1,37 @@
+{#
+    This HTML template extends "base.html" and serves as the main dashboard for administrators.
+
+    **Overview**:
+    - The dashboard provides a central navigation hub for administrative tasks, offering quick access to various sections related to user and withdrawal management.
+
+    **Features**:
+    - **Welcome Message**:
+      - Displays a welcome header for the admin user.
+
+    - **Navigation Links**:
+      - Provides links to different administrative pages:
+        - **Create User**: A link to the user creation page (`create_user`).
+        - **Pending Withdrawals**: A link to view and manage pending withdrawal requests (`client_withdrawals`).
+        - **Approved Withdrawals**: A link to view and manage approved withdrawals (`approved_withdrawals`).
+        - **Declined Withdrawals**: A link to view and manage declined withdrawals (`declined_withdrawals`).
+
+    **Dependencies**:
+    - Utilizes Flask's `url_for` function to generate URLs for the respective pages, ensuring that links are dynamically updated according to the routing configuration.
+
+    **Styling**:
+    - Inherits styling from "base.html" and does not include any additional custom styling.
+
+#}
+
+
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Welcome to the Admin Dashboard</h1>
+<ul>
+    <li><a href="{{ url_for('create_user') }}">Create User</a></li>
+    <li><a href="{{ url_for('client_withdrawals') }}">Pending Withdrawals</a></li>
+    <li><a href="{{ url_for('approved_withdrawals') }}">Approved Withdrawals</a></li>
+    <li><a href="{{ url_for('declined_withdrawals') }}">Declined Withdrawals</a></li>
+</ul>
+{% endblock %}

@@ -1,0 +1,44 @@
+[01;34m.[00m
+├── [01;34m__pycache__[00m
+│   ├── config.cpython-37.pyc
+│   ├── db.cpython-37.pyc
+│   ├── __init__.cpython-37.pyc
+│   ├── main.cpython-37.pyc
+│   └── models.cpython-37.pyc
+├── [01;34mstatic[00m
+│   ├── [01;34mcss[00m
+│   │   └── semantic.min.css
+│   ├── [01;34mfonts[00m
+│   │   ├── brand-icons.eot
+│   │   ├── [01;35mbrand-icons.svg[00m
+│   │   ├── brand-icons.ttf
+│   │   ├── brand-icons.woff
+│   │   ├── brand-icons.woff2
+│   │   ├── icons.eot
+│   │   ├── icons.otf
+│   │   ├── [01;35micons.svg[00m
+│   │   ├── icons.ttf
+│   │   ├── icons.woff
+│   │   ├── icons.woff2
+│   │   ├── outline-icons.eot
+│   │   ├── [01;35moutline-icons.svg[00m
+│   │   ├── outline-icons.ttf
+│   │   ├── outline-icons.woff
+│   │   └── outline-icons.woff2
+│   └── [01;34mjs[00m
+│       └── semantic.min.js
+├── [01;34mtemplates[00m
+│   ├── base.html
+│   ├── client_withdrawals.html
+│   ├── create_user.html
+│   ├── dashboard.html
+│   └── login.html
+├── config.py
+├── dbinit.py
+├── db.py
+├── main.py
+├── models.py
+├── tree.txt
+└── tronbot_admin.code-workspace
+
+6 directories, 35 files

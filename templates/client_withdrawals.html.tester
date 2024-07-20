@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}View/Process Client Withdrawals{% endblock %}
+
+{% block content %}
+<h1 class="ui header">Client Withdrawals</h1>
+
+<div class="ui segment">
+    <pre id="withdrawals-data"></pre>
+</div>
+
+<script>
+function fetchWithdrawalsData() {
+    fetch('/api/client_withdrawal_page_update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const pre = document.getElementById('withdrawals-data');
+        pre.textContent = JSON.stringify(data, null, 2); // Pretty print JSON data
+    })
+    .catch(error => console.error('Error fetching data:', error));
+}
+
+// Initial fetch
+fetchWithdrawalsData();
+</script>
+
+{% endblock %}

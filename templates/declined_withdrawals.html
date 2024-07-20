@@ -1,0 +1,108 @@
+{#
+    This HTML template, extending from "base.html", is designed to display and manage declined withdrawal requests.
+
+    It presents a table listing declined withdrawals with columns for ID, chat ID, name, currency, amount, fees, net amount, wallet, request timestamp, decline timestamp, and the user who declined the request.
+
+    **Key Functionalities:**
+
+    - **Table Display**:
+      - The table dynamically shows declined withdrawal requests retrieved from the server. Each row includes details about the withdrawal.
+
+    - **JavaScript Functions**:
+      - `fetchDeclinedWithdrawalsAndUpdateTable()`: Fetches and updates the table with the latest declined withdrawal data from the server.
+
+    - **Data Refresh**:
+      - The data is refreshed every 5 seconds to ensure that the displayed information is up-to-date.
+
+    **Styling**:
+    - Custom CSS is applied to highlight table rows on hover, enhancing user interaction and readability.
+
+    **Dependencies**:
+    - Uses Semantic UI for table styling.
+    - JavaScript fetch API for asynchronous data fetching and updating.
+
+#}
+
+{% extends "base.html" %}
+
+{% block title %}View Declined Withdrawals{% endblock %}
+
+{% block content %}
+    <h1 class="ui header">Declined Withdrawals</h1>
+
+    <table id="declined-withdrawals-table" class="ui celled red table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Chat ID</th>
+                <th>Firstname</th>
+                <th>Lastname</th>
+                <th>Currency</th>
+                <th class="right aligned">Amount</th>
+                <th class="right aligned">Fee Percent</th>
+                <th class="right aligned">Fee Amount</th>
+                <th class="right aligned">Net Amount</th>
+                <th>Wallet</th>
+                <th>Requested</th>
+                <th>Declined</th>
+                <th>By</th>
+            </tr>
+        </thead>
+        <tbody id="declined-withdrawals-body">
+            <!-- Table rows will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        function fetchDeclinedWithdrawalsAndUpdateTable() {
+            fetch('/api/declined_withdrawals_page_update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('declined-withdrawals-body');
+                tbody.innerHTML = ''; // Clear existing rows
+
+                data.forEach(withdrawal => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${withdrawal['wrid']}</td>
+                        <td>${withdrawal['chat_id']}</td>
+                        <td>${withdrawal['firstname']}</td>
+                        <td>${withdrawal['lastname']}</td>
+                        <td>${withdrawal['currency']}</td>
+                        <td class="right aligned">${withdrawal['amount']}</td>
+                        <td class="right aligned">${withdrawal['fee_percent']}</td>
+                        <td class="right aligned">${withdrawal['fee_amount']}</td>
+                        <td class="right aligned">${withdrawal['net_amount']}</td>
+                        <td>${withdrawal['wallet']}</td>
+                        <td>${withdrawal['timestamp']}</td>
+                        <td>${withdrawal['declined_timestamp']}</td>
+                        <td>${withdrawal['declined_by_username']}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Initial fetch and update
+        fetchDeclinedWithdrawalsAndUpdateTable();
+
+        // Refresh data every 5 seconds
+        setInterval(fetchDeclinedWithdrawalsAndUpdateTable, 5000);
+    </script>
+
+    <style>
+        /* Custom CSS for hover effect */
+        #declined-withdrawals-table tbody tr:hover {
+            background-color: #ffada8 !important; /* Light red */
+            color: #140909 !important;
+            font-weight: 500;
+        }
+    </style>
+
+{% endblock %}

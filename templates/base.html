@@ -1,0 +1,76 @@
+{#
+    This HTML template serves as the base layout for all pages in the admin panel.
+
+    **Overview**:
+    - Provides a common structure and style for the admin panel, including a header with navigation, and a container for main content.
+
+    **Features**:
+    - **Meta Tags**:
+      - Sets the character encoding to UTF-8 and the viewport settings for responsive design.
+
+    - **Title Block**:
+      - Allows page-specific titles to be defined by extending templates, defaulting to "OrcaTron Admin Panel".
+
+    - **Styles and Scripts**:
+      - Includes jQuery library and Semantic UI JavaScript for functionality and styling.
+      - Links to Semantic UI and custom CSS files for styling.
+      - Provides a script link for Semantic UI JavaScript functionalities.
+
+    - **Header Navigation**:
+      - **Navbar**: Features links to major sections of the admin panel:
+        - **Dashboard**: Link to the dashboard page (`dashboard`).
+        - **Create User**: Link to the user creation page (`create_user`).
+        - **Login/Logout**: Conditional link to log in or log out based on user authentication status.
+
+    - **Main Content Area**:
+      - Defines a container (`ui container`) where page-specific content will be injected through `{% block content %}`.
+
+    **Dependencies**:
+    - Utilizes Flask’s `url_for` function for generating URLs dynamically.
+
+    **Styling**:
+    - Inherits styles from Semantic UI and custom CSS for additional styling.
+    
+    **Additional Notes**:
+    - Placeholder for optional footer or other global content, if needed.
+
+#}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OrcaTron Admin Panel{% endblock %}</title>
+    <!-- jQuery first, then Semantic UI -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/semantic.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/semantic.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}"> <!-- New custom CSS file -->
+    <script src="{{ url_for('static', filename='js/semantic.min.js') }}"></script>
+    <!-- Other meta tags, favicon, etc. -->
+</head>
+<body>
+    <!-- Navbar or header -->
+    <div class="ui menu">
+        <a class="item" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="item" href="{{ url_for('create_user') }}">Create User</a>
+        <div class="right menu">
+            {% if current_user.is_authenticated %}
+                <a class="item" href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a class="item" href="{{ url_for('login') }}">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="ui container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Optional footer or other global content -->
+
+</body>
+</html>

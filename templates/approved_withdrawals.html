@@ -1,0 +1,193 @@
+{#
+    This HTML template, extending from "base.html", is intended for viewing and managing approved withdrawal requests.
+
+    It presents a table listing approved withdrawals with columns for ID, chat ID, name, currency, amount, fees, net amount, wallet, request timestamp, approval timestamp, approved by, and actions.
+
+    **Key Functionalities:**
+
+    - **Table Display**:
+      - The table dynamically shows approved withdrawal requests retrieved from the server. Each row includes details about the withdrawal and an action button for rolling back the approval.
+
+    - **Modal**:
+      - **Confirmation Modal**:
+        - Displays a confirmation dialog when the user clicks the "Rollback" button. The modal warns about the implications of rolling back an approved withdrawal and requires confirmation to proceed.
+
+    - **JavaScript Functions**:
+      - `fetchApprovedWithdrawalsAndUpdateTable()`: Fetches and updates the table with the latest approved withdrawal data from the server.
+      - `handleRollback(wrid)`: Opens the confirmation modal and processes the rollback request if confirmed by the user.
+      - `fetchApprovedWithdrawalsAndUpdateTable()`: Refreshes the table data every 5 seconds to reflect any new changes.
+
+    - **Event Listeners**:
+      - **Rollback Button**: Each rollback button in the table has an event listener that triggers the rollback process.
+      - **Modal Buttons**: Handles the user’s choice in the confirmation modal, proceeding with or canceling the rollback based on the user's response.
+
+    **Styling**:
+    - Custom CSS is applied to highlight table rows on hover for better visual feedback.
+
+    **Dependencies**:
+    - Uses Semantic UI for modal dialogs and styling.
+    - JavaScript fetch API for asynchronous data fetching and updating.
+    - jQuery for handling modals and DOM interactions.
+
+#}
+
+{% extends "base.html" %}
+
+{% block title %}View Approved Withdrawals{% endblock %}
+
+{% block content %}
+    <h1 class="ui header">Approved Withdrawals</h1>
+
+    <table id="approved-withdrawals-table" class="ui celled green table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Chat ID</th>
+                <th>Firstname</th>
+                <th>Lastname</th>
+                <th>Currency</th>
+                <th class="right aligned">Amount</th>
+                <th class="right aligned">Fee Percent</th>
+                <th class="right aligned">Fee Amount</th>
+                <th class="right aligned">Net Amount</th>
+                <th>Wallet</th>
+                <th>Requested</th>
+                <th>Approved</th>
+                <th>By</th>
+                <th>Actions</th> <!-- New column for actions -->
+            </tr>
+        </thead>
+        <tbody id="approved-withdrawals-body">
+            <!-- Table rows will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <!-- Modal for confirmation -->
+    <div class="ui basic modal" id="confirmRollbackModal">
+        <div class="ui icon header">
+            <i class="exclamation triangle icon"></i>
+            Confirm Rollback
+        </div>
+        <div class="content">
+            <p>Are you certain you wish to proceed with rolling back this withdrawal?<br><br>Please be aware that rolling back a withdrawal approved prior<br>to the last returns' compounding may result in an inaccurate balance.\nIn such instances, a manual correction will be necessary.</p>
+        </div>
+        <div class="actions">
+            <div class="ui red cancel inverted button">
+                <i class="remove icon"></i>
+                No
+            </div>
+            <div class="ui green ok inverted button">
+                <i class="checkmark icon"></i>
+                Yes
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fetchApprovedWithdrawalsAndUpdateTable() {
+            fetch('/api/approved_withdrawals_page_update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('approved-withdrawals-body');
+                tbody.innerHTML = ''; // Clear existing rows
+
+                data.forEach(withdrawal => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${withdrawal['wrid']}</td>
+                        <td>${withdrawal['chat_id']}</td>
+                        <td>${withdrawal['firstname']}</td>
+                        <td>${withdrawal['lastname']}</td>
+                        <td>${withdrawal['currency']}</td>
+                        <td class="right aligned">${withdrawal['amount']}</td>
+                        <td class="right aligned">${withdrawal['fee_percent']}</td>
+                        <td class="right aligned">${withdrawal['fee_amount']}</td>
+                        <td class="right aligned">${withdrawal['net_amount']}</td>
+                        <td>${withdrawal['wallet']}</td>
+                        <td>${withdrawal['timestamp']}</td>
+                        <td>${withdrawal['approved_timestamp']}</td>
+                        <td>${withdrawal['approved_by_username']}</td>
+                        <td>
+                            <button class="ui red button rollback-button" data-wrid="${withdrawal['wrid']}">Rollback</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Add event listener to each rollback button
+                document.querySelectorAll('.rollback-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const wrid = this.getAttribute('data-wrid');
+                        // Call function to handle rollback here
+                        handleRollback(wrid);
+                    });
+                });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function handleRollback(wrid) {
+            // Open the confirmation modal
+            $('#confirmRollbackModal').modal('show');
+
+            // Handle the modal response
+            $('.ok.button').on('click', function () {
+                $('#confirmRollbackModal').modal('hide');
+                console.log('Rollback requested for WRID:', wrid);
+
+                // Proceed with rollback only if confirmed
+                fetch(`/api/rollback_withdrawal?wrid=${wrid}`, {
+                    method: 'GET', 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('data.message: ', data.message)
+                    if (data.message === 'rollback successful') {
+                        console.log('Rollback successful');
+                        fetchApprovedWithdrawalsAndUpdateTable(); // refresh the table after record deleted
+                    } else {
+                        console.error('Rollback failed:', data.error);
+                    }
+                })
+                .catch(error => console.error('error rolling back:', error));
+            });
+
+            $('.cancel.button').on('click', function () {
+                $('#confirmRollbackModal').modal('hide');
+            });
+        }
+
+        // Event listener for rollback buttons
+        document.querySelectorAll('.rollback-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const wrid = this.getAttribute('data-wrid');
+                // Call function to handle rollback here
+                handleRollback(wrid);
+            });
+        });
+
+        // Initial fetch and update
+        fetchApprovedWithdrawalsAndUpdateTable();
+
+        // Refresh data every 5 seconds (example)
+        setInterval(fetchApprovedWithdrawalsAndUpdateTable, 5000);
+    </script>
+
+    <style>
+        /* Custom CSS for hover effect */
+        #approved-withdrawals-table tbody tr:hover {
+            background-color: #a3ffaa !important; /* Light blue */
+            color: #071407 !important;
+            font-weight: 500;
+        }
+    </style>
+
+{% endblock %}
