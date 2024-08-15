@@ -14,6 +14,7 @@ Imports:
     - psycopg2: A PostgreSQL database adapter for Python. Used for connecting to and interacting with the PostgreSQL database.
     - Config (from config): Custom configuration module that provides database credentials and other configuration settings.
     - generate_password_hash (from werkzeug.security): A utility for securely hashing passwords. Used for creating secure passwords for database users.
+
 """
 
 import logging
