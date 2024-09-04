@@ -20,6 +20,7 @@ class Config:
     SECRET_KEY = 'a_really_long_and_random_secret_key'
     WITHDRAWAL_FEE = 10.00  # Withdrawal fee in percent, two decimals
     CLIENT_HOST = "http://localhost:8000"
+    RETURNS_HOST = "http://localhost:5010"
 
     class DBCONFIG:
         """

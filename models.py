@@ -1,5 +1,5 @@
 # models.py
-
+import requests
 import psycopg2
 from psycopg2 import extras, pool
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -1121,3 +1121,190 @@ class Withdrawals:
         except AttributeError as e:
             logger.error(f"Error retrieving ID: {e}")
             raise ValueError("ID attribute not set or available.")
+        
+
+class UnidentifiedDeposits:
+    def get_unidentified_deposits(self):
+        """
+        Retrieves all unidentified deposits from the external API.
+
+        Returns:
+            list: A list of dictionaries representing all unidentified deposits.
+
+        Raises:
+            ValueError: If there is an issue with the API request.
+        """
+        url = f"{Config.CLIENT_HOST}/api/get_unidentified_deposits"
+        
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an error for bad status codes
+            deposits = response.json()  # Parse the response as JSON
+
+            # Clean single quotes from relevant fields
+            for deposit in deposits:
+                if 'transaction_id' in deposit:
+                    deposit['transaction_id'] = deposit['transaction_id'].replace("'", '')
+                if 'from_address' in deposit:
+                    deposit['from_address'] = deposit['from_address'].replace("'", '')
+                if 'to_address' in deposit:
+                    deposit['to_address'] = deposit['to_address'].replace("'", '')
+
+            
+            logger.info("Successfully retrieved all unidentified deposits.")
+            return deposits
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error retrieving unidentified deposits: {e}")
+            raise ValueError(f"Error retrieving unidentified deposits: {e}")        
+    
+
+    def update_depositlogs_refund(self, transaction_id: str, refund_transaction_id: str):
+        url = f"{Config.CLIENT_HOST}/api/update_depositlogs_refund"
+
+        # Prepare the payload for the POST request
+        payload = {
+            'p_transaction_id': transaction_id.replace("'", ""),
+            'p_refund_transaction_id': refund_transaction_id
+        }
+
+        try:
+            # POST request
+            result = requests.post(url, json=payload)
+
+            # Check for HTTP errors
+            result.raise_for_status()
+
+            # Return the JSON response from the FastAPI server
+            return result.json()
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error updating refund transaction: {e}")
+            raise ValueError(f"Error updating refund transaction: {e}")
+        
+
+class ReportingData:
+    def get_clients_list(self):
+        url = f"{Config.RETURNS_HOST}/api/get_clients_list"
+
+        try:
+            result = requests.post(url)
+
+            # Check for HTTP errors
+            result.raise_for_status()
+
+            print(result)
+
+            # return response from FastAPI server
+            return result.json()
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error loading clients list: {e}")
+            raise ValueError(f"Error loading clients list: {e}")
+
+
+    def ledger_report(self, chat_id: int, firstname: str, lastname: str):
+        url = f"{Config.RETURNS_HOST}/api/ledger_view"
+
+        try:
+            # Make a POST request with account_name as part of the JSON body
+            response = requests.post(url, params={
+                'chat_id': chat_id,
+                'firstname': firstname,
+                'lastname': lastname
+            })
+            # Check for HTTP errors
+            response.raise_for_status()
+
+            # Return response from FastAPI server
+            return response.json()
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error loading ledger view data: {e}")
+            raise ValueError(f"Error loading ledger view data: {e}")
+        
+
+    def ledger_by_transaction_type_report(self, transaction_type: str):
+        url = f"{Config.RETURNS_HOST}/api/ledger_by_transaction_type"
+
+        try:
+            # Make a POST request with account_name as part of the JSON body
+            response = requests.post(url, params={
+                'transaction_type': transaction_type
+            })
+            # Check for HTTP errors
+            response.raise_for_status()
+
+            # Return response from FastAPI server
+            return response.json()
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error loading ledger by transaction type view data: {e}")
+            raise ValueError(f"Error loading ledger by transaction type view data: {e}")
+    
+
+
+    def get_transaction_types_list(self):
+        url = f"{Config.RETURNS_HOST}/api/ledger_get_transaction_types"
+
+        try:
+            result = requests.post(url)
+
+            # Check for HTTP errors
+            result.raise_for_status()
+
+            # return response from FastAPI server
+            return result.json()
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error loading clients list: {e}")
+            raise ValueError(f"Error loading clients list: {e}")
+        
+
+    def balances_sum(self):
+        url = f"{Config.RETURNS_HOST}/api/balances_sum"
+
+        try:
+            result = requests.post(url)
+
+            # Check for HTTP errors
+            result.raise_for_status()
+
+            # return response from FastAPI server
+            return result.json()
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error loading blances sum: {e}")
+            
+
+    def balances_count(self):
+        url = f"{Config.RETURNS_HOST}/api/balances_count"
+
+        try:
+            result = requests.post(url)
+
+            # Check for HTTP errors
+            result.raise_for_status()
+
+            # return response from FastAPI server
+            return result.json()
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error loading balances count: {e}")
+
+
+
+    def balances_view(self):
+        url = f"{Config.RETURNS_HOST}/api/balances_view"
+
+        try:
+            result = requests.post(url)
+
+            # Check for HTTP errors
+            result.raise_for_status()
+
+            # return response from FastAPI server
+            return result.json()
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error loading clients list: {e}")
+            raise ValueError(f"Error loading clients list: {e}")

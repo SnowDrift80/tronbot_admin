@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Ledger By Transaction Type Preselection{% endblock %}
+
+{% block content %}
+<h1>Select Transaction Type for Pivot Table</h1>
+
+<form id="pivot_form" action="/api/load_ledger_by_transaction_type_pivot" method="post">
+    <div class="ui fluid search selection dropdown">
+        <input type="hidden" name="transaction_type" id="transaction_type">
+        <i class="dropdown icon"></i>
+        <div class="default text">Select Transaction Type</div>
+        <div class="menu">
+            {% for transaction_type in transaction_types %}
+                <div class="item" data-value="{{ transaction_type }}">{{ transaction_type }}</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="ui button">Submit</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script>
+    // Initialize the dropdown with search enabled
+    $('.ui.dropdown').dropdown({
+        fullTextSearch: 'exact', // Enables more accurate search results
+        onChange: function(value) {
+            // Set the selected value to the hidden input field
+            $('#transaction_type').val(value);
+            // Submit the form
+            $('#pivot_form').submit();
+        }
+    });
+</script>
+
+{% endblock %}

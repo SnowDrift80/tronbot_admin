@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Interactive Ledger Pivot Table{% endblock %}
+
+{% block content %}
+<h1>Interactive Ledger Pivot Table</h1>
+    <!-- Include the generated pivot table -->
+    <iframe src="{{ url_for('static', filename=pivot_file) }}" width="120%" height="800px" style="border:none;"></iframe>
+{% endblock %}

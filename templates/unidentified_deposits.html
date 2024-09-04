@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}View/Process Unidentified Deposits{% endblock %}
+
+{% block content %}
+    <h1 class="ui header">Unidentified Deposits</h1>
+
+    <!-- Container for the table to handle overflow and scrolling -->
+    <div class="table-container">
+        <table id="transactions-table" class="ui selectable inverted celled brown table">
+            <thead>
+                <tr>
+                    <th>Addresses</th>
+                    <th>Blockchain</th>
+                    <th>Refund</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="transactions-body">
+                <!-- Table rows will be populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Semantic UI Modal for Refund Confirmation -->
+    <div class="ui modal" id="confirmation-modal">
+        <div class="header" id="modal-header">Refund Confirmation</div>
+        <div class="content">
+            <p id="modal-message">Are you sure you want to refund this transaction?</p>
+        </div>
+        <div class="actions">
+            <div class="ui red cancel button">No</div>
+            <div class="ui green approve button">Yes</div>
+        </div>
+    </div>
+
+    <!-- Semantic UI Modal for Editing Refund Transaction ID -->
+    <div class="ui modal" id="refund-modal">
+        <div class="header">Update Refund Information</div>
+        <div class="content">
+            <form class="ui form" id="refund-form">
+                <div class="field">
+                    <label>Refund Transaction ID</label>
+                    <input type="text" name="refund_transaction_id" id="refund-transaction-id">
+                </div>
+                <div class="field">
+                    <label>Refund Timestamp</label>
+                    <input type="text" name="refund_timestamp" id="refund-timestamp" readonly>
+                </div>
+            </form>
+        </div>
+        <div class="actions">
+            <div class="ui red cancel button">Cancel</div>
+            <div class="ui green submit button">Submit</div>
+        </div>
+    </div>    
+
+    <script>
+        function fetchDepositsAndUpdateTable() {
+            fetch('/api/unidentified_deposits_update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Received data:', data);
+    
+                if (data && Array.isArray(data.deposits)) {
+                    const tbody = document.getElementById('transactions-body');
+                    tbody.innerHTML = '';
+    
+                    data.deposits.forEach(transaction => {
+                        // Determine button caption and color
+                        const isRefunded = transaction.refund_transaction_id;
+                        const buttonCaption = isRefunded ? 'Edit' : 'Refund';
+                        const buttonClass = isRefunded ? 'yellow' : 'green';
+    
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <div class="ui vertical orange small label">Original Eth Transaction ID:</div>
+                                <div>${transaction.transaction_id}</div>
+                                <div class="ui vertical orange small label">From Sender Address:</div>
+                                <div>${transaction.from_address}</div>
+                                <div class="ui vertical orange small label">To Deposit Address:</div>
+                                <div>${transaction.to_address}</div>
+                            </td>
+                            <td>
+                                <div class="ui vertical orange small label">Block Number:</div>
+                                <div>${transaction.block_number}</div>
+                                <div class="ui vertical orange small label">Block Timestamp:</div>
+                                <div>${new Date(transaction.block_timestamp).toLocaleString()}</div>
+                            </td>
+                            <td>
+                                <div class="ui vertical orange small label">Amount:</div>
+                                <div>${transaction.amount}</div>
+                                <div class="ui vertical orange small label">Refund Eth Transaction ID:</div>
+                                <div>${transaction.refund_transaction_id || 'N/A'}</div>
+                                <div class="ui vertical orange small label">Refund Timestamp</div>
+                                <div>${transaction.refund_timestamp ? new Date(transaction.refund_timestamp).toLocaleString() : 'N/A'}</div>
+                            </td>
+                            <td>
+                                <button class="ui ${buttonClass} button" 
+                                        onclick="openRefundModal('${transaction.transaction_id}', '${transaction.refund_transaction_id || ''}', '${transaction.refund_timestamp || ''}')">
+                                        ${buttonCaption}
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    console.error('Expected data.deposits to be an array:', data);
+                }
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+    
+        function openRefundModal(transactionId, refundTransactionId, refundTimestamp) {
+            // Set the form values
+            document.getElementById('refund-transaction-id').value = refundTransactionId;
+            document.getElementById('refund-timestamp').value = refundTimestamp ? new Date(refundTimestamp).toLocaleString() : '';
+
+            // Show the modal
+            $('#refund-modal').modal('show');
+
+            // Attach event listener to the "Submit" button
+            document.querySelector('#refund-modal .submit.button').addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default form submission
+
+                // Get the user input value for the refund transaction ID
+                const updatedRefundTransactionId = document.getElementById('refund-transaction-id').value;
+
+                // Make an API call to update the transaction
+                fetch('/api/update_depositlogs_refund', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transaction_id: transactionId,
+                        refund_transaction_id: updatedRefundTransactionId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error updating refund transaction:', data.error);
+                    } else {
+                        console.log('Refund transaction updated successfully:', data);
+                        // Refresh the table after update
+                        fetchDepositsAndUpdateTable();
+                    }
+                })
+                .catch(error => console.error('Error updating refund transaction:', error));
+                
+                // Close the modal after submission
+                $('#refund-modal').modal('hide');
+            }, { once: true }); // Ensure the event is only attached once
+        }
+
+    
+        fetchDepositsAndUpdateTable();
+        setInterval(fetchDepositsAndUpdateTable, 5000);
+    </script>
+    
+<style>
+    /* Ensure full-width container for table */
+    .table-container {
+        width: 100%;
+        overflow-x: auto; /* Enable horizontal scrolling if needed */
+        margin: 0 auto; /* Center the container */
+    }
+
+    /* Table styling */
+    #transactions-table {
+        width: 100%; /* Ensure table takes full width */
+        min-width: 1600px; /* Minimum width for the table to fit content */
+        border-collapse: collapse; /* Collapse borders to remove gaps */
+    }
+
+    /* Header and cell styling */
+    #transactions-table th,
+    #transactions-table td {
+        padding: 12px; /* Add padding for readability */
+        text-align: left; /* Align text to the left */
+        vertical-align: top; /* Align text to the top for better readability */
+        border: 1px solid #ddd; /* Add borders for table cells */
+    }
+
+    /* Stack content vertically within each cell */
+    #transactions-table td > div {
+        margin-bottom: 8px; /* Space between stacked items */
+    }
+
+    /* Button styling */
+    #transactions-table .ui.button {
+        width: 100%; /* Full-width button */
+    }
+
+    /* Alternating row colors */
+    #transactions-table tbody tr:nth-child(odd) {
+        background-color: #ffe7d7; /* White background for odd rows */
+        color: black;
+    }
+
+    #transactions-table tbody tr:nth-child(even) {
+        background-color: #ffd7ba; /* Light brown background for even rows */
+        color: black;
+    }
+
+    /* Responsive adjustments */
+    @media screen and (max-width: 1920px) {
+        #transactions-table {
+            min-width: 1200px; /* Adjust the minimum width on smaller screens */
+        }
+    }
+
+    @media screen and (min-width: 1200px) {
+        .ui.container {
+            width: 1440px;
+        }
+    }
+</style>
+
+
+{% endblock %}

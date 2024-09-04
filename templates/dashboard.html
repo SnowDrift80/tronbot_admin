@@ -33,5 +33,11 @@
     <li><a href="{{ url_for('client_withdrawals') }}">Pending Withdrawals</a></li>
     <li><a href="{{ url_for('approved_withdrawals') }}">Approved Withdrawals</a></li>
     <li><a href="{{ url_for('declined_withdrawals') }}">Declined Withdrawals</a></li>
+    <li><a href="{{ url_for('unidentified_deposits') }}">Unidentified Deposits</a></li>
+    <li><a href="{{ url_for('ledger_presel') }}">Report: Ledger by Client</a></li>
+    <li><a href="{{ url_for('ledger_by_transaction_type_presel') }}">Report: Ledger by Transaction Type</a></li>
+    <li><a href="{{ url_for('balances') }}">Report: Balances and Total</a></li>
+
+
 </ul>
 {% endblock %}

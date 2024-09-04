@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Searchable Dropdown</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
+</head>
+<body>
+
+<div class="ui fluid search selection dropdown">
+    <input type="hidden" name="account_name">
+    <i class="dropdown icon"></i>
+    <div class="default text">Select Account</div>
+    <div class="menu">
+        <div class="item" data-value="123 John Doe">123 John Doe</div>
+        <div class="item" data-value="456 Jane Smith">456 Jane Smith</div>
+        <div class="item" data-value="1000000001 Mary Steiner">1000000001 Mary Steiner</div>
+        <div class="item" data-value="1000000002 Elvira Newcomer">1000000002 Elvira Newcomer</div>
+        <div class="item" data-value="1000000003 John Hart">1000000003 John Hart</div>
+        <div class="item" data-value="1000000004 Jane Poole">1000000004 Jane Poole</div>
+        <div class="item" data-value="1000000005 Nichole Weir">1000000005 Nichole Weir</div>
+        <div class="item" data-value="1000000006 Janet Arnold">1000000006 Janet Arnold</div>
+        <div class="item" data-value="1000000007 Clarence Lizotte">1000000007 Clarence Lizotte</div>
+        <div class="item" data-value="1000000008 Julianne Adame">1000000008 Julianne Adame</div>
+        <div class="item" data-value="1000000009 Jessica King">1000000009 Jessica King</div>
+        <div class="item" data-value="1000000010 Sammy Mateer">1000000010 Sammy Mateer</div>
+        <div class="item" data-value="1000000011 Katie Lindsay">1000000011 Katie Lindsay</div>
+        <div class="item" data-value="1000000012 Cheryl Albright">1000000012 Cheryl Albright</div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script>
+    // Initialize the dropdown with search enabled
+    $('.ui.dropdown').dropdown({
+        fullTextSearch: 'exact' // Enables more accurate search results
+    });
+</script>
+
+</body>
+</html>

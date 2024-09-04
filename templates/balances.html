@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Balances View{% endblock %}
+
+{% block content %}
+<h1>Balances View</h1>
+
+<!-- Vertical Space -->
+<div style="margin-bottom: 20px;"></div>
+
+<!-- Flexbox container for Sum of All Balances and Balances Count -->
+<div style="display: flex; align-items: center; font-weight: 600;">
+    <label for="balances_sum">Sum of All Balances:&nbsp;</label>
+    <span id="balances_sum">{{ balances_sum }}</span>
+
+    <!-- Use margin-left on this span to add space between the two sections -->
+    <span style="margin-left: 40px;"></span>
+
+    <label for="balances_count">Balances Count:&nbsp;</label>
+    <span id="balances_count">{{ balances_count }}</span>
+</div>
+
+<!-- Vertical Space -->
+<div style="margin-bottom: 20px;"></div>
+
+<!-- Table using Semantic UI -->
+<table class="ui celled striped selectable table">
+    <thead>
+        <tr>
+            <th>Chat ID</th>
+            <th>Firstname</th>
+            <th>Lastname</th>
+            <th>Currency</th>
+            <th class="right aligned">Balance</th>
+            <th>Creation Date</th>
+            <th>Last Update Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for balance in balances_view %}
+        <tr class="clickable-row" data-chat-id="{{ balance.chat_id }}" data-firstname="{{ balance.firstname }}" data-lastname="{{ balance.lastname }}">
+            <td>{{ balance.chat_id }}</td>
+            <td>{{ balance.firstname }}</td>
+            <td>{{ balance.lastname }}</td>
+            <td>{{ balance.currency }}</td>
+            <td class="right aligned">{{ balance.balance }}</td>
+            <td>{{ balance.creation_date }}</td>
+            <td>{{ balance.last_update_date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Hidden form to submit account_name -->
+<form id="ledger_form" action="/api/load_ledger_pivot" method="post" style="display: none;">
+    <input type="hidden" name="account_name" id="account_name">
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Handle row click event
+        $('.clickable-row').on('click', function() {
+            // Get the data attributes
+            const chat_id = $(this).data('chat-id');
+            const firstname = $(this).data('firstname');
+            const lastname = $(this).data('lastname');
+
+            // Concatenate the values to form account_name
+            const account_name = chat_id + ' ' + firstname + ' ' + lastname;
+
+            // Set the value to the hidden input field
+            $('#account_name').val(account_name);
+
+            // Submit the form
+            $('#ledger_form').submit();
+        });
+        // Change cursor to pointer on hover for clickable rows
+        $('.clickable-row').hover(function() {
+            $(this).css('cursor', 'pointer');
+        });
+    });
+</script>
+{% endblock %}

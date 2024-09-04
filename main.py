@@ -3,7 +3,9 @@
 import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from models import User, Withdrawals
+from models import User, Withdrawals, UnidentifiedDeposits, ReportingData
+import pandas as pd
+from pivottablejs import pivot_ui
 from config import Config
 from werkzeug.security import generate_password_hash
 from datetime import datetime
@@ -316,6 +318,7 @@ def create_withdrawal_request():
             
 
 @app.route('/api/client_withdrawal_page_update', methods=['POST'])
+@login_required
 def client_withdrawals_page_update():
     """
     Retrieves and returns all withdrawal requests in JSON format.
@@ -350,6 +353,7 @@ def client_withdrawals_page_update():
 
 
 @app.route('/api/approved_withdrawals_page_update', methods=['POST'])
+@login_required
 def approved_withdrawals_page_update():
     """
     Retrieves and returns all approved withdrawal requests in JSON format.
@@ -384,6 +388,7 @@ def approved_withdrawals_page_update():
 
 
 @app.route('/api/declined_withdrawals_page_update', methods=['POST'])
+@login_required
 def declined_withdrawals_page_update():
     """
     Retrieves and returns all declined withdrawal requests in JSON format.
@@ -816,6 +821,7 @@ def declined_withdrawals():
 
 
 @app.route('/api/busy_withdrawal')
+@login_required
 def busy_withdrawal():
     """
     Checks if a withdrawal request exists for the given 'chat_id'.
@@ -858,6 +864,7 @@ def busy_withdrawal():
 
 
 @app.route('/api/rollback_withdrawal', methods=['GET'])
+@login_required
 def rollback_withdrawal():
     """
     Rolls back an approved withdrawal and notifies the client app.
@@ -931,6 +938,272 @@ def rollback_withdrawal():
         logger.error(f"An error occurred while rolling back the withdrawal: {e}")
         return jsonify({'error': 'An error occurred while processing the request'}), 500
 
+
+@app.route('/unidentified_deposits')
+@login_required
+def unidentified_deposits():
+    """
+    Renders the declined withdrawals page for the currently logged-in user.
+
+    This endpoint handles GET requests to display the declined withdrawals page.
+    It retrieves all declined withdrawals and passes them to the `declined_withdrawals.html` template
+    along with information about the current user.
+
+    Returns:
+        Response: The rendered HTML template for declined withdrawals.
+    """
+    try:
+        # Log the retrieval of declined withdrawals and current user information
+        # logger.info(f"Retrieved unidentified deposits: {withdrawals}")
+        logger.info(f"Current user ID: {current_user.id}")
+
+        # Render the declined withdrawals page with the retrieved data
+        return render_template('unidentified_deposits.html', current_user=current_user)
+    
+    except Exception as e:
+        # Log any errors that occur during the data retrieval or rendering process
+        logger.error(f"An error occurred while retrieving declined withdrawals or rendering the page: {e}")
+
+        # Render an error page or return an appropriate response
+        return jsonify({'error': 'An error occurred while processing the request'}), 500
+
+
+@app.route('/api/unidentified_deposits_update', methods=['POST'])
+@login_required
+def unidentified_deposits_update():
+    """
+    retrieve unidentified_deposits to update the unidentified_deposits.html page
+
+    Returns:
+        Response: The rendered HTML template for declined withdrawals.
+    """
+    try:
+        model = UnidentifiedDeposits()
+        # Fetch all declined withdrawal requests from the database
+        depositlogs_updated = model.get_unidentified_deposits()
+        
+        # Log the retrieval of declined withdrawals and current user information
+        # logger.info(f"Retrieved unidentified deposits: {withdrawals}")
+        logger.info(f"Current user ID: {current_user.id}")
+
+        # Return the unidentified deposits as JSON
+        return jsonify({'deposits': depositlogs_updated})
+    
+    except Exception as e:
+        # Log any errors that occur during the data retrieval or processing
+        logger.error(f"An error occurred while retrieving unidentified deposits: {e}")
+
+        # Return an error message as JSON
+        return jsonify({'error': 'An error occurred while processing the request'}), 500
+
+
+@app.route('/api/update_depositlogs_refund', methods=['POST'])
+@login_required
+def update_depositlogs_refund():
+    try:
+        data= request.get_json()
+        # extreact transaction_id and refund_transaction_id
+        transaction_id = data.get('transaction_id')
+        refund_transaction_id = data.get('refund_transaction_id')
+
+        # udpate Client datbase through integration endpoints
+        model = UnidentifiedDeposits()
+        result = model.update_depositlogs_refund(transaction_id, refund_transaction_id)
+        return jsonify(result)
+    
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
+        return jsonify({'error': str(ve)}), 400
+    except Exception as e:
+        logger.error(f"An error occurred while updating refund transaction: {e}")
+        return jsonify({'error': 'An error occurred while processing the request'}), 500
+    
+
+@app.route('/api/load_ledger_pivot', methods=['GET','POST'])
+def load_ledger_pivot():
+    try:
+        # retrieve the account_name from POST request
+        account_name = request.form.get('account_name')
+
+        # validate account_name if not empty
+        if not account_name:
+            raise ValueError("No account name provided")
+        
+        clients_model = ReportingData()
+        Clients = clients_model.get_clients_list()
+        clients_index = {client['account_name']: client for client in Clients}
+
+        client = clients_index.get(account_name)
+
+        if client:
+            chat_id = client.get('chat_id')
+            firstname = client.get('firstname')
+            lastname = client.get('lastname')
+
+        # udpate Client datbase through integration endpoints
+        model = ReportingData()
+        queryset = model.ledger_report(chat_id, firstname, lastname)
+
+        columns = [
+            'primary_key', 'transaction_type', 'chat_id', 'firstname', 'lastname',
+            'currency', 'method', 'amount', 'deposit_address', 'eth_transaction_id',
+            'eth_transaction_timestamp', 'eth_from_address', 'post_timestamp', 'year', 
+            'quarter', 'month', 'week', 'day'
+        ]        
+        # Convert queryset to Pandas DataFrame
+        df = pd.DataFrame(queryset, columns=columns)
+
+        # Ensure timestamp is in datetime format
+        df['post_timestamp'] = pd.to_datetime(df['post_timestamp'])
+        
+        # Add year, quarter, month, week, day columns
+        df['year'] = df['post_timestamp'].dt.year
+        df['quarter'] = df['post_timestamp'].dt.to_period('Q').astype(str)
+        df['month'] = df['post_timestamp'].dt.to_period('M').astype(str)
+        df['week'] = df['post_timestamp'].dt.to_period('W').astype(str)
+        df['day'] = df['post_timestamp'].dt.date
+
+        # Generate the pivot table and save it to an HTML file
+        pivot_file_path = 'static/pivot_table.html'  # Adjust this path
+        pivot_ui(df, outfile_path=pivot_file_path)
+
+        # Render the HTML content within your template
+        return render_template('report_ledger.html', pivot_file='pivot_table.html', current_user=current_user)
+
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
+        return jsonify({'error': str(ve)}), 400
+    except Exception as e:
+        logger.error(f"An error occurred while loading report_ledger: {e}")
+        return jsonify({'error': 'An error occurred while processing the request'}), 500
+    
+
+
+@app.route('/api/load_ledger_by_transaction_type_pivot', methods=['GET','POST'])
+def load_ledger_by_transaction_type_pivot():
+    try:
+        # retrieve the account_name from POST request
+        transaction_type = request.form.get('transaction_type')
+
+        # validate account_name if not empty
+        if not transaction_type:
+            raise ValueError("No transaction type provided")
+        
+        # load ledger data by transaction type
+        model = ReportingData()
+        print(f"model.ledger_by_transaction_type_report({transaction_type})")
+        queryset = model.ledger_by_transaction_type_report(transaction_type)
+        print(f"\n\n\nQueryset:\n{queryset}\n\n\n")
+
+        columns = [
+            'transaction_type', 'chat_id', 'firstname', 'lastname',
+            'currency', 'amount', 'eth_transaction_id',
+            'eth_transaction_timestamp', 'eth_from_address', 'post_timestamp', 'year', 
+            'quarter', 'month', 'week', 'day'
+        ]        
+   
+        # Convert queryset to Pandas DataFrame
+        df = pd.DataFrame(queryset, columns=columns)
+
+        # Ensure timestamp is in datetime format
+        df['post_timestamp'] = pd.to_datetime(df['post_timestamp'])
+        
+        # Add year, quarter, month, week, day columns
+        df['year'] = df['post_timestamp'].dt.year
+        df['quarter'] = df['post_timestamp'].dt.to_period('Q').astype(str)
+        df['month'] = df['post_timestamp'].dt.to_period('M').astype(str)
+        df['week'] = df['post_timestamp'].dt.to_period('W').astype(str)
+        df['day'] = df['post_timestamp'].dt.date
+
+        # Generate the pivot table and save it to an HTML file
+        pivot_file_path = 'static/ledger_by_transaction_type_pivot_table.html'  # Adjust this path
+        pivot_ui(df, outfile_path=pivot_file_path)
+
+        # Render the HTML content within your template
+        return render_template('report_ledger_by_transaction_type.html', pivot_file='ledger_by_transaction_type_pivot_table.html', current_user=current_user)
+
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
+        return jsonify({'error': str(ve)}), 400
+    except Exception as e:
+        logger.error(f"An error occurred while loading report_ledger: {e}")
+        return jsonify({'error': 'An error occurred while processing the request'}), 500    
+
+
+@app.route('/ledger_presel', methods=['GET', 'POST'])
+@login_required
+def ledger_presel():
+    try:
+        model = ReportingData()
+        clients_data = model.get_clients_list()
+        client_accounts = []
+        for client in clients_data:
+            client_accounts.append(client['account_name'])
+        
+        return render_template('ledger_presel.html', clients=client_accounts, current_user=current_user)
+   
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
+        return jsonify({'error': str(ve)}), 400
+    except Exception as e:
+        logger.error(f"An error occurred while retrieving ledger_presel.html: {e}")
+        return jsonify({'error': 'An error occurred while processing the request'}), 500
+    
+
+@app.route('/balances', methods=['GET', 'POST'])
+@login_required
+def balances():
+    try:
+        model = ReportingData()
+        balances_sum = model.balances_sum()[0]
+        formatted_balances_sum = "{:,.2f}".format(balances_sum)
+
+        balances_count = model.balances_count()[0]
+        formatted_balances_count = "{:,.2f}".format(balances_count)
+        print(f"BALANCES COUNT: {formatted_balances_count}")
+
+        balances_data = model.balances_view()
+
+        # Convert list of lists to list of dictionaries
+        balances_view = [
+            {
+                'chat_id': row[0],
+                'firstname': row[1],
+                'lastname': row[2],
+                'currency': row[3],
+                'balance': "{:,.2f}".format(row[4]),
+                'creation_date': row[5],
+                'last_update_date': row[6],
+            }
+            for row in balances_data
+        ]
+        
+        return render_template('balances.html', balances_sum=formatted_balances_sum, balances_count=formatted_balances_count, balances_view=balances_view, current_user=current_user)
+   
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
+        return jsonify({'error': str(ve)}), 400
+    except Exception as e:
+        logger.error(f"An error occurred while retrieving balances.html: {e}")
+        return jsonify({'error': 'An error occurred while processing the request'}), 500
+
+
+
+@app.route('/api/ledger_by_transaction_type_presel', methods=['GET', 'POST'])
+@login_required
+def ledger_by_transaction_type_presel():
+    try:
+        model = ReportingData()
+        transaction_types_data = model.get_transaction_types_list()
+        
+        return render_template('ledger_by_transaction_type_presel.html', transaction_types=transaction_types_data, current_user=current_user)
+   
+    except ValueError as ve:
+        logger.error(f"Validation error: {ve}")
+        return jsonify({'error': str(ve)}), 400
+    except Exception as e:
+        logger.error(f"An error occurred while retrieving ledger_presel.html: {e}")
+        return jsonify({'error': 'An error occurred while processing the request'}), 500
 
 
 if __name__ == '__main__':

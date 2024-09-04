@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Ledger Preselection{% endblock %}
+
+{% block content %}
+<h1>Select User for Pivot Table</h1>
+
+<form id="pivot_form" action="/api/load_ledger_pivot" method="post">
+    <div class="ui fluid search selection dropdown">
+        <input type="hidden" name="account_name" id="account_name">
+        <i class="dropdown icon"></i>
+        <div class="default text">Select Account</div>
+        <div class="menu">
+            {% for client in clients %}
+                <div class="item" data-value="{{ client }}">{{ client }}</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="ui button">Submit</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script>
+    // Initialize the dropdown with search enabled
+    $('.ui.dropdown').dropdown({
+        fullTextSearch: 'exact' // Enables more accurate search results
+    });
+
+    // Ensure the form submits the selected value
+    $('#account_name').on('change', function() {
+        $('#pivot_form').submit();
+    });
+</script>
+{% endblock %}
