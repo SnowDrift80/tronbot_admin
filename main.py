@@ -821,7 +821,6 @@ def declined_withdrawals():
 
 
 @app.route('/api/busy_withdrawal')
-@login_required
 def busy_withdrawal():
     """
     Checks if a withdrawal request exists for the given 'chat_id'.
