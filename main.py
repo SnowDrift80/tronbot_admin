@@ -599,7 +599,8 @@ def withdrawal_to_declined():
 
         # Retrieve withdrawal data from the database
         withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
-
+        logger.debug(f"Retrieved withdrawal data: {withdrawal_data}")
+        
         # Update the withdrawal status to declined in the local database
         Withdrawals.withdrawal_to_declined(wrid, admin_id)
 
