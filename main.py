@@ -45,12 +45,14 @@ def load_user(user_id):
     """
     try:
         user_id_int = int(user_id)
-        logger.info(f"Attempting to load user with ID: {user_id_int}")
+        #logger.info(f"Attempting to load user with ID: {user_id_int}")
         user = User.get_by_id(user_id_int)
         if user:
-            logger.info(f"User {user_id_int} loaded successfully.")
+            # logger.info(f"User {user_id_int} loaded successfully.")
+            pass
         else:
-            logger.warning(f"User {user_id_int} not found.")
+            # logger.warning(f"User {user_id_int} not found.")
+            pass
         return user
     except ValueError as e:
         logger.error(f"Invalid user ID: {user_id}. Error: {e}")
@@ -337,7 +339,7 @@ def client_withdrawals_page_update():
         withdrawals_data = [dict(row) for row in withdrawals]
         
         # Log the retrieved data for debugging purposes
-        logger.info("Retrieved withdrawal requests data: %s", withdrawals_data)
+        #logger.info("Retrieved withdrawal requests data: %s", withdrawals_data)
         
         # Return the data as a JSON response
         return jsonify(withdrawals_data)
@@ -531,6 +533,10 @@ def withdrawal_to_approved():
         # Get withdrawal data from the database
         withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
         logger.info(f"Retrieved withdrawal data (approved): {withdrawal_data}")
+        if not withdrawal_data:
+            time.sleep(3)
+            withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
+            logger.warning("Possible race condition - trying again to obtain withdrawal_data (declined)")
 
         # Update the withdrawal status to approved in the local database
         Withdrawals.withdrawal_to_approved(wrid, admin_id)
@@ -603,7 +609,7 @@ def withdrawal_to_declined():
         if not withdrawal_data:
             time.sleep(3)
             withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
-            logger.warning("Possible race condition - trying again to obtain withdrawal_data")
+            logger.warning("Possible race condition - trying again to obtain withdrawal_data (declined)")
 
         logger.info(f"Retrieved withdrawal data (declined): {withdrawal_data}")
 
