@@ -72,9 +72,9 @@ class Database:
                 raise ValueError("Failed to obtain a valid database connection.")
 
             # Log successful connection acquisition
-            logger.info("Successfully obtained a new database connection.")
+            # logger.info("Successfully obtained a new database connection.")
             # Log the current connection pool status
-            logger.info("DB Connection Pool Status: %s", Database.pool_status())
+            # logger.info("DB Connection Pool Status: %s", Database.pool_status())
 
             return conn
 
@@ -102,7 +102,7 @@ class Database:
             if conn is not None:
                 db_pool.putconn(conn)
                 # Log successful return of the connection
-                logger.info("Database connection returned to the pool.")
+                # logger.info("Database connection returned to the pool.")
             else:
                 logger.warning("Attempted to close a None connection.")
         
@@ -140,7 +140,7 @@ class Database:
             }
             
             # Log the pool status
-            logger.info("Connection Pool Status: %s", status)
+            # logger.info("Connection Pool Status: %s", status)
             
             return status
         
@@ -204,7 +204,7 @@ class User(UserMixin):
         self.username = username
         self.password_hash = password_hash
 
-        logger.info("User object initialized: id=%s, username=%s", id, username)
+        # logger.info("User object initialized: id=%s, username=%s", id, username)
 
 
     @staticmethod
@@ -611,7 +611,7 @@ class Withdrawals:
             # Fetch all results from the executed procedure
             withdrawals = cur.fetchall()
             
-            logger.info("Successfully retrieved all withdrawal requests.")
+            #logger.info("Successfully retrieved all withdrawal requests.")
             return withdrawals
         
         except Exception as e:
@@ -649,7 +649,7 @@ class Withdrawals:
             # Fetch all results from the executed procedure
             withdrawals = cur.fetchall()
             
-            logger.info("Successfully retrieved all approved withdrawal requests.")
+            #logger.info("Successfully retrieved all approved withdrawal requests.")
             return withdrawals
         
         except Exception as e:
@@ -687,7 +687,7 @@ class Withdrawals:
             # Fetch all results from the executed procedure
             withdrawals = cur.fetchall()
             
-            logger.info("Successfully retrieved all declined withdrawal requests.")
+            #logger.info("Successfully retrieved all declined withdrawal requests.")
             return withdrawals
         
         except Exception as e:
@@ -1151,7 +1151,7 @@ class UnidentifiedDeposits:
                     deposit['to_address'] = deposit['to_address'].replace("'", '')
 
             
-            logger.info("Successfully retrieved all unidentified deposits.")
+            #logger.info("Successfully retrieved all unidentified deposits.")
             return deposits
         except requests.exceptions.RequestException as e:
             logger.error(f"Error retrieving unidentified deposits: {e}")
