@@ -1,5 +1,5 @@
 # main.py
-
+import time
 import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -600,6 +600,11 @@ def withdrawal_to_declined():
 
         # Retrieve withdrawal data from the database
         withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
+        if not withdrawal_data:
+            time.sleep(3)
+            withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
+            logger.warning("Possible race condition - trying again to obtain withdrawal_data")
+
         logger.info(f"Retrieved withdrawal data (declined): {withdrawal_data}")
 
         # Update the withdrawal status to declined in the local database
