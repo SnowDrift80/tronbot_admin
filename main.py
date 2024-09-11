@@ -530,7 +530,7 @@ def withdrawal_to_approved():
 
         # Get withdrawal data from the database
         withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
-        logger.debug(f"Retrieved withdrawal data (approved): {withdrawal_data}")
+        logger.info(f"Retrieved withdrawal data (approved): {withdrawal_data}")
 
         # Update the withdrawal status to approved in the local database
         Withdrawals.withdrawal_to_approved(wrid, admin_id)
@@ -600,7 +600,7 @@ def withdrawal_to_declined():
 
         # Retrieve withdrawal data from the database
         withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
-        logger.debug(f"Retrieved withdrawal data (declined): {withdrawal_data}")
+        logger.info(f"Retrieved withdrawal data (declined): {withdrawal_data}")
 
         # Update the withdrawal status to declined in the local database
         Withdrawals.withdrawal_to_declined(wrid, admin_id)
