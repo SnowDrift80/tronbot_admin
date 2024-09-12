@@ -251,13 +251,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                unlockRecord(id)  // Unlock the record after approval is confirmed
-                    .then(() => {
-                        console.log('Record unlocked');
-                        $('#confirmation-modal').modal('hide'); // Manually hide the modal
-                        fetchWithdrawalsAndUpdateTable();  // Refresh table
-                    })
-                    .catch(error => console.error('Error unlocking record:', error));
+                // alert(data.message); ** only for debugging
+                fetchWithdrawalsAndUpdateTable();
             })
             .catch(error => console.error('Error approving payout:', error));
         }
@@ -272,16 +267,12 @@
             })
             .then(response => response.json())
             .then(data => {
-                unlockRecord(id)  // Unlock the record after decline is confirmed
-                    .then(() => {
-                        console.log('Record unlocked');
-                        $('#confirmation-modal').modal('hide'); // Manually hide the modal
-                        fetchWithdrawalsAndUpdateTable();  // Refresh table
-                    })
-                    .catch(error => console.error('Error unlocking record:', error));
+                // alert(data.message); ** only for debugging
+                fetchWithdrawalsAndUpdateTable();
             })
             .catch(error => console.error('Error refusing payout:', error));
         }
+
         function lockRecord(wrid, adminId) {
             return fetch('/api/lock_record', {
                 method: 'POST',
@@ -329,7 +320,7 @@
                 if (currentAction === 'approve' || currentAction === 'decline') {
                     unlockRecord(currentId)
                         .then(() => {
-                           console.log('Record unlocked');
+                            console.log('Record unlocked');
                         })
                         .catch(error => console.error('Error unlocking record:', error));
                 }

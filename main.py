@@ -374,7 +374,7 @@ def approved_withdrawals_page_update():
         withdrawals_data = [dict(row) for row in withdrawals]
         
         # Log the retrieved data for debugging purposes
-        logger.info("Retrieved approved withdrawal requests data: %s", withdrawals_data)
+        #logger.info("Retrieved approved withdrawal requests data: %s", withdrawals_data)
         
         # Return the data as a JSON response
         return jsonify(withdrawals_data)
@@ -436,6 +436,7 @@ def lock_record():
         Response: A JSON response indicating success or an error message.
     """
     try:
+        logger.info(f"*** Received request data: {request.json}")
         # Extract JSON data from the request
         data = request.json
         
@@ -518,8 +519,8 @@ def withdrawal_to_approved():
         Response: A JSON response indicating the success or failure of the approval and notification process.
     """
     data = request.json
-    wrid = data.get('wrid')
-    admin_id = data.get('admin_id')
+    wrid = int(data.get('wrid'))
+    admin_id = int(data.get('admin_id'))
 
     # Validate the required fields
     if not wrid or not admin_id:
@@ -534,9 +535,9 @@ def withdrawal_to_approved():
         withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
         logger.info(f"Retrieved withdrawal data (approved): {withdrawal_data}")
         if not withdrawal_data:
-            time.sleep(3)
-            withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
-            logger.warning("Possible race condition - trying again to obtain withdrawal_data (declined)")
+            #time.sleep(3)
+            withdrawal_data = Withdrawals.get_withdrawal_record(wrid)
+            logger.warning("Possible race condition - trying again to obtain withdrawal_data (approved)")
 
         # Update the withdrawal status to approved in the local database
         Withdrawals.withdrawal_to_approved(wrid, admin_id)
@@ -555,7 +556,7 @@ def withdrawal_to_approved():
             "wallet": withdrawal_data['wallet'],
             "timestamp": withdrawal_data['timestamp'].isoformat(),
             "status": withdrawal_data['status'],
-            "approved_by_username": withdrawal_data['approved_by_username']
+            "approved_by_username": withdrawal_data.get('approved_by_username', 'AE-ADMIN')
         }
 
         # Log the payload to be sent to the client application
@@ -604,11 +605,12 @@ def withdrawal_to_declined():
         # Log the attempt to decline the withdrawal
         logger.info(f"Attempting to decline withdrawal with wrid: {wrid} by admin_id: {admin_id}")
 
-        # Retrieve withdrawal data from the database
+        # Get withdrawal data from the database
         withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
+        logger.info(f"Retrieved withdrawal data (decline): {withdrawal_data}")
         if not withdrawal_data:
-            time.sleep(3)
-            withdrawal_data = Withdrawals.get_withdrawal_data(wrid, admin_id)
+            #time.sleep(3)
+            withdrawal_data = Withdrawals.get_withdrawal_record(wrid)
             logger.warning("Possible race condition - trying again to obtain withdrawal_data (declined)")
 
         logger.info(f"Retrieved withdrawal data (declined): {withdrawal_data}")
@@ -630,7 +632,7 @@ def withdrawal_to_declined():
             "wallet": withdrawal_data['wallet'],
             "timestamp": withdrawal_data['timestamp'].isoformat(),
             "status": withdrawal_data['status'],
-            "declined_by_username": withdrawal_data['approved_by_username']  # Assuming it should be 'declined_by_username'
+            "declined_by_username": withdrawal_data.get('approved_by_username', 'AE-ADMIN')  # Assuming it should be 'declined_by_username'
         }
 
         # Log the payload to be sent to the client application
@@ -787,8 +789,8 @@ def approved_withdrawals():
         withdrawals = Withdrawals.get_all_approved_withdrawals()
         
         # Log the retrieval of approved withdrawals and current user information
-        logger.info(f"Retrieved approved withdrawals: {withdrawals}")
-        logger.info(f"Current user ID: {current_user.id}")
+        #logger.info(f"Retrieved approved withdrawals: {withdrawals}")
+        #logger.info(f"Current user ID: {current_user.id}")
 
         # Render the approved withdrawals page with the retrieved data
         return render_template('approved_withdrawals.html', withdrawals=withdrawals, current_user=current_user)
@@ -819,8 +821,8 @@ def declined_withdrawals():
         withdrawals = Withdrawals.get_all_declined_withdrawals()
         
         # Log the retrieval of declined withdrawals and current user information
-        logger.info(f"Retrieved declined withdrawals: {withdrawals}")
-        logger.info(f"Current user ID: {current_user.id}")
+        #logger.info(f"Retrieved declined withdrawals: {withdrawals}")
+        #logger.info(f"Current user ID: {current_user.id}")
 
         # Render the declined withdrawals page with the retrieved data
         return render_template('declined_withdrawals.html', withdrawals=withdrawals, current_user=current_user)

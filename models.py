@@ -273,10 +273,10 @@ class User(UserMixin):
             cur.close()
 
             if result:
-                logger.info("User found with ID: %s", user_id)
+                #logger.info("User found with ID: %s", user_id)
                 return User(result['user_id'], result['user_name'], result['password_hash'])  # Adjust column names accordingly
             else:
-                logger.info("No user found with ID: %s", user_id)
+                #logger.info("No user found with ID: %s", user_id)
                 return None
         except Exception as e:
             logger.error("An error occurred while retrieving user by ID: %s", e)
@@ -811,7 +811,7 @@ class Withdrawals:
             # Execute the stored procedure to mark the withdrawal as approved
             cur.callproc('withdrawal_to_approved', (wrid, admin_id))
             conn.commit()
-            logger.info(f"Successfully marked withdrawal request {wrid} as approved by admin {admin_id}.")
+            #logger.info(f"Successfully marked withdrawal request {wrid} as approved by admin {admin_id}.")
 
         except Exception as e:
             logger.error(f"Error while marking withdrawal request {wrid} as approved: {e}")
@@ -852,7 +852,7 @@ class Withdrawals:
             # Execute the stored procedure to mark the withdrawal as declined
             cur.callproc('withdrawal_to_declined', (wrid, admin_id))
             conn.commit()
-            logger.info(f"Successfully marked withdrawal request {wrid} as declined by admin {admin_id}.")
+            #logger.info(f"Successfully marked withdrawal request {wrid} as declined by admin {admin_id}.")
 
         except Exception as e:
             logger.error(f"Error while marking withdrawal request {wrid} as declined: {e}")
@@ -866,7 +866,7 @@ class Withdrawals:
 
 
     @staticmethod
-    def get_withdrawal_data(wrid, admin_id):
+    def get_withdrawal_data(wrid: int, admin_id: int):
         """
         Retrieve detailed information for a specific withdrawal request.
 
